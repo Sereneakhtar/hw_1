@@ -1,0 +1,159 @@
+import javafx.application.Application;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
+import javafx.scene.layout.*;
+import javafx.stage.Stage;
+
+public class hw1 extends Application {
+    private TextArea billArea; // TextArea for the bill
+    private CheckBox eggSandwich, chickenSandwich, bagel, potatoSalad;
+    private RadioButton blackTea, greenTea, coffee, orangeJuice;
+    private ToggleGroup drinksGroup;
+
+    // Prices
+    private final double EGG_SANDWICH_PRICE = 7.99;
+    private final double CHICKEN_SANDWICH_PRICE = 9.99;
+    private final double BAGEL_PRICE = 2.50;
+    private final double POTATO_SALAD_PRICE = 4.49;
+    private final double BLACK_TEA_PRICE = 1.25;
+    private final double GREEN_TEA_PRICE = 0.99;
+    private final double COFFEE_PRICE = 1.99;
+    private final double ORANGE_JUICE_PRICE = 2.25;
+    private final double TAX_RATE = 0.07;
+
+    public static void main(String[] args) {
+        launch(args);
+    }
+
+    @Override
+    public void start(Stage primaryStage) {
+        primaryStage.setTitle("Joe’s Deli Breakfast");
+
+        // Layout Setup
+        GridPane grid = new GridPane();
+        grid.setVgap(10);
+        grid.setHgap(20);
+
+        // Food CheckBoxes
+        eggSandwich = new CheckBox("Egg Sandwich");
+        chickenSandwich = new CheckBox("Chicken Sandwich");
+        bagel = new CheckBox("Bagel");
+        potatoSalad = new CheckBox("Potato Salad");
+
+        VBox foodBox = new VBox(5, new Label("Eat:"), eggSandwich, chickenSandwich, bagel, potatoSalad);
+
+        // Drinks RadioButtons
+        blackTea = new RadioButton("Black Tea");
+        greenTea = new RadioButton("Green Tea");
+        coffee = new RadioButton("Coffee");
+        orangeJuice = new RadioButton("Orange Juice");
+
+        drinksGroup = new ToggleGroup();
+        blackTea.setToggleGroup(drinksGroup);
+        greenTea.setToggleGroup(drinksGroup);
+        coffee.setToggleGroup(drinksGroup);
+        orangeJuice.setToggleGroup(drinksGroup);
+
+        VBox drinksBox = new VBox(5, new Label("Drink:"), blackTea, greenTea, coffee, orangeJuice);
+
+        // Bill Area
+        billArea = new TextArea();
+        billArea.setPrefSize(200, 150);
+        billArea.setEditable(false);
+
+        // Buttons
+        Button orderButton = new Button("Order");
+        Button cancelButton = new Button("Cancel");
+        Button confirmButton = new Button("Confirm");
+
+        orderButton.setOnAction(e -> processOrder());
+        cancelButton.setOnAction(e -> clearSelections());
+        confirmButton.setOnAction(e -> confirmOrder());
+
+        HBox buttonBox = new HBox(10, orderButton, cancelButton, confirmButton);
+
+        // Add to Grid
+        grid.add(foodBox, 0, 0);
+        grid.add(drinksBox, 1, 0);
+        grid.add(billArea, 2, 0);
+        grid.add(buttonBox, 0, 1, 3, 1);
+
+        // Scene and Stage
+        Scene scene = new Scene(grid, 600, 300);
+        primaryStage.setScene(scene);
+        primaryStage.show();
+    }
+
+    private void processOrder() {
+        double total = 0.0;
+        StringBuilder bill = new StringBuilder("Order Summary:\n");
+
+        // Food
+        if (eggSandwich.isSelected()) {
+            bill.append("Egg Sandwich: $").append(EGG_SANDWICH_PRICE).append("\n");
+            total += EGG_SANDWICH_PRICE;
+        }
+        if (chickenSandwich.isSelected()) {
+            bill.append("Chicken Sandwich: $").append(CHICKEN_SANDWICH_PRICE).append("\n");
+            total += CHICKEN_SANDWICH_PRICE;
+        }
+        if (bagel.isSelected()) {
+            bill.append("Bagel: $").append(BAGEL_PRICE).append("\n");
+            total += BAGEL_PRICE;
+        }
+        if (potatoSalad.isSelected()) {
+            bill.append("Potato Salad: $").append(POTATO_SALAD_PRICE).append("\n");
+            total += POTATO_SALAD_PRICE;
+        }
+
+        // Drinks
+        RadioButton selectedDrink = (RadioButton) drinksGroup.getSelectedToggle();
+        if (selectedDrink != null) {
+            String drink = selectedDrink.getText();
+            double price = getDrinkPrice(drink);
+            bill.append(drink).append(": $").append(price).append("\n");
+            total += price;
+        }
+
+        if (total == 0) { // If nothing is selected
+            billArea.setText("Please select at least one food or drink item.");
+            return;
+        }
+
+        // Tax and Total
+        double tax = total * TAX_RATE;
+        double finalTotal = total + tax;
+        bill.append(String.format("\nTax (7%%): $%.2f\nTotal: $%.2f", tax, finalTotal));
+
+        billArea.setText(bill.toString());
+    }
+
+    private void clearSelections() {
+        eggSandwich.setSelected(false);
+        chickenSandwich.setSelected(false);
+        bagel.setSelected(false);
+        potatoSalad.setSelected(false);
+        drinksGroup.selectToggle(null);
+        billArea.clear();
+    }
+
+    private void confirmOrder() {
+        String finalBill = billArea.getText();
+        if (finalBill.isEmpty()) {
+            billArea.setText("No order to confirm.");
+        } else {
+            billArea.setText(finalBill + "\n\nOrder Confirmed. Thank you!");
+        }
+        clearSelections();
+    }
+
+    private double getDrinkPrice(String drink) {
+        return switch (drink) {
+            case "Black Tea" -> BLACK_TEA_PRICE;
+            case "Green Tea" -> GREEN_TEA_PRICE;
+            case "Coffee" -> COFFEE_PRICE;
+            case "Orange Juice" -> ORANGE_JUICE_PRICE;
+            default -> 0.0;
+        };
+    }
+}
